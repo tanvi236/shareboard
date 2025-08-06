@@ -1,7 +1,12 @@
 import { InvitationsService } from './invitations.service';
 import { UserDocument } from '../users/schemas/user.schema';
-import { SendInvitationDto } from './dto/send-invitation.dto';
-import { GetUserInvitationsDto } from './dto/get-user-invitations.dto';
+declare class SendInvitationDto {
+    boardId: string;
+    email: string;
+}
+declare class GetUserInvitationsDto {
+    email: string;
+}
 export declare class InvitationsController {
     private readonly invitationsService;
     constructor(invitationsService: InvitationsService);
@@ -9,6 +14,10 @@ export declare class InvitationsController {
         success: boolean;
         message: string;
         data: import("./schemas/invitation.schema").Invitation;
+    }>;
+    getUserInvitations(getUserInvitationsDto: GetUserInvitationsDto, user: UserDocument): Promise<{
+        success: boolean;
+        data: import("./schemas/invitation.schema").Invitation[];
     }>;
     getInvitationByToken(token: string): Promise<{
         success: boolean;
@@ -21,10 +30,6 @@ export declare class InvitationsController {
             board: import("../boards/schemas/board.schema").Board;
             requiresRegistration: boolean;
         };
-    }>;
-    getUserInvitations(getUserInvitationsDto: GetUserInvitationsDto, user: UserDocument): Promise<{
-        success: boolean;
-        data: import("./schemas/invitation.schema").Invitation[];
     }>;
     getBoardInvitations(boardId: string, user: UserDocument): Promise<{
         success: boolean;
@@ -39,3 +44,4 @@ export declare class InvitationsController {
         message: string;
     }>;
 }
+export {};

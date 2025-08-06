@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
 import { CreateBoardDto, UpdateBoardDto } from './boards.service';
+import { BoardWithPopulatedBlocks } from './types/board.types';
 
 @ApiTags('boards')
 @Controller('boards')
@@ -32,6 +33,20 @@ export class BoardsController {
     @GetUser() user: UserDocument,
   ) {
     const board = await this.boardsService.findOne(id, user._id.toString());
+    return {
+      success: true,
+      data: board,
+    };
+  }
+
+  @Get(':id/blocks')
+  @ApiOperation({ summary: 'Get board with all blocks' })
+  @ApiResponse({ status: 200, description: 'Board with blocks retrieved successfully' })
+  async getBoardWithBlocks(
+    @Param('id') id: string,
+    @GetUser() user: UserDocument,
+  ): Promise<{ success: boolean; data: BoardWithPopulatedBlocks }> {
+    const board = await this.boardsService.findBoardWithBlocks(id, user._id.toString());
     return {
       success: true,
       data: board,
@@ -68,8 +83,7 @@ export class BoardsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete board' })
-  @ApiResponse({ status: 200, description: 'Board deleted successfully' })
+  @ApiOperation({ description: 'Board deleted successfully' })
   async remove(
     @Param('id') id: string,
     @GetUser() user: UserDocument,

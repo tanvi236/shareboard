@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const board_schema_1 = require("./schemas/board.schema");
+const block_schema_1 = require("../blocks/schemas/block.schema");
 class CreateBoardDto {
 }
 exports.CreateBoardDto = CreateBoardDto;
@@ -24,8 +25,9 @@ class UpdateBoardDto {
 }
 exports.UpdateBoardDto = UpdateBoardDto;
 let BoardsService = class BoardsService {
-    constructor(boardModel) {
+    constructor(boardModel, blockModel) {
         this.boardModel = boardModel;
+        this.blockModel = blockModel;
     }
     async findAll(userId) {
         return this.boardModel
@@ -52,6 +54,48 @@ let BoardsService = class BoardsService {
             throw new common_1.ForbiddenException('Access denied');
         }
         return board;
+    }
+    async findBoardWithBlocks(id, userId) {
+        const board = await this.boardModel
+            .findById(id)
+            .populate(['owner', 'collaborators'])
+            .lean();
+        if (!board) {
+            throw new common_1.NotFoundException('Board not found');
+        }
+        const hasAccess = board.owner.toString() === userId ||
+            board.collaborators.some(collaborator => collaborator.toString() === userId) ||
+            board.isPublic;
+        if (!hasAccess) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        const blocks = await this.blockModel
+            .find({ boardId: id })
+            .populate('createdBy')
+            .sort({ createdAt: -1 })
+            .lean();
+        return {
+            ...board,
+            blocks: blocks
+        };
+    }
+    async checkBoardAccess(boardId, userId) {
+        try {
+            const board = await this.boardModel
+                .findById(boardId)
+                .populate(['owner', 'collaborators']);
+            if (!board) {
+                return false;
+            }
+            const hasAccess = board.owner._id.toString() === userId ||
+                board.collaborators.some(collaborator => collaborator._id.toString() === userId) ||
+                board.isPublic;
+            return hasAccess;
+        }
+        catch (error) {
+            console.error('Error checking board access:', error);
+            return false;
+        }
     }
     async create(createBoardDto, userId) {
         const board = new this.boardModel({
@@ -83,6 +127,7 @@ let BoardsService = class BoardsService {
         if (board.owner.toString() !== userId) {
             throw new common_1.ForbiddenException('Only board owner can delete board');
         }
+        await this.blockModel.deleteMany({ boardId: id });
         await this.boardModel.findByIdAndDelete(id);
     }
     async addCollaborator(id, email, userId) {
@@ -100,6 +145,8 @@ exports.BoardsService = BoardsService;
 exports.BoardsService = BoardsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(board_schema_1.Board.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(1, (0, mongoose_1.InjectModel)(block_schema_1.Block.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], BoardsService);
 //# sourceMappingURL=boards.service.js.map

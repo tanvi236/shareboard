@@ -37,6 +37,13 @@ let BoardsController = class BoardsController {
             data: board,
         };
     }
+    async getBoardWithBlocks(id, user) {
+        const board = await this.boardsService.findBoardWithBlocks(id, user._id.toString());
+        return {
+            success: true,
+            data: board,
+        };
+    }
     async create(createBoardDto, user) {
         const board = await this.boardsService.create(createBoardDto, user._id.toString());
         return {
@@ -87,6 +94,16 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BoardsController.prototype, "findOne", null);
 __decorate([
+    (0, common_1.Get)(':id/blocks'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get board with all blocks' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Board with blocks retrieved successfully' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], BoardsController.prototype, "getBoardWithBlocks", null);
+__decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create new board' }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Board created successfully' }),
@@ -109,8 +126,7 @@ __decorate([
 ], BoardsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete board' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Board deleted successfully' }),
+    (0, swagger_1.ApiOperation)({ description: 'Board deleted successfully' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),

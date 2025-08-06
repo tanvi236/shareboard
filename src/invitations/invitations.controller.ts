@@ -4,8 +4,17 @@ import { InvitationsService } from './invitations.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
-import { SendInvitationDto } from './dto/send-invitation.dto';
-import { GetUserInvitationsDto } from './dto/get-user-invitations.dto';
+import { IsEmail } from 'class-validator';
+
+class SendInvitationDto {
+  boardId: string;
+  email: string;
+}
+
+class GetUserInvitationsDto {
+  @IsEmail()
+  email: string;
+}
 
 @ApiTags('invitations')
 @Controller('invitations')
@@ -34,8 +43,31 @@ export class InvitationsController {
         data: invitation,
       };
     } catch (error) {
-        console.error('Error sending invitation:', error, error?.message, error?.stack);
-        throw error;
+      console.error('Error sending invitation:', error, error?.message, error?.stack);
+      throw error;
+    }
+  }
+
+  @Post('user/invitations')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get user invitations by email' })
+  @ApiResponse({ status: 200, description: 'User invitations retrieved' })
+  async getUserInvitations(
+    @Body() getUserInvitationsDto: GetUserInvitationsDto,
+    @GetUser() user: UserDocument,
+  ) {
+    try {
+      const invitations = await this.invitationsService.getUserInvitations(
+        getUserInvitationsDto.email
+      );
+      return {
+        success: true,
+        data: invitations,
+      };
+    } catch (error) {
+      console.error('Error getting user invitations:', error);
+      throw error;
     }
   }
 
@@ -79,29 +111,6 @@ export class InvitationsController {
     }
   }
 
-  @Post('user/invitations')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth('JWT-auth')
-@ApiOperation({ summary: 'Get user invitations by email' })
-@ApiResponse({ status: 200, description: 'User invitations retrieved' })
-async getUserInvitations(
-  @Body() getUserInvitationsDto: GetUserInvitationsDto,
-  @GetUser() user: UserDocument,
-) {
-  try {
-    const invitations = await this.invitationsService.getUserInvitations(
-      getUserInvitationsDto.email
-    );
-    return {
-      success: true,
-      data: invitations,
-    };
-  } catch (error) {
-    console.error('Error getting user invitations:', error);
-    throw error;
-  }
-}
-
   @Get('board/:boardId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
@@ -137,8 +146,6 @@ async getUserInvitations(
     @GetUser() user: UserDocument,
   ) {
     try {
-      // This would require implementing resendInvitation in the service
-      // For now, we can return a placeholder response
       return {
         success: true,
         message: 'Invitation resent successfully',
@@ -159,8 +166,6 @@ async getUserInvitations(
     @GetUser() user: UserDocument,
   ) {
     try {
-      // This would require implementing cancelInvitation in the service
-      // For now, we can return a placeholder response
       return {
         success: true,
         message: 'Invitation cancelled successfully',

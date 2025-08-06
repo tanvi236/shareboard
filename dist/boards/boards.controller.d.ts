@@ -1,6 +1,7 @@
 import { BoardsService } from './boards.service';
 import { UserDocument } from '../users/schemas/user.schema';
 import { CreateBoardDto, UpdateBoardDto } from './boards.service';
+import { BoardWithPopulatedBlocks } from './types/board.types';
 export declare class BoardsController {
     private readonly boardsService;
     constructor(boardsService: BoardsService);
@@ -11,6 +12,10 @@ export declare class BoardsController {
     findOne(id: string, user: UserDocument): Promise<{
         success: boolean;
         data: import("./schemas/board.schema").Board;
+    }>;
+    getBoardWithBlocks(id: string, user: UserDocument): Promise<{
+        success: boolean;
+        data: BoardWithPopulatedBlocks;
     }>;
     create(createBoardDto: CreateBoardDto, user: UserDocument): Promise<{
         success: boolean;

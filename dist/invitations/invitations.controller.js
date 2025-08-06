@@ -18,8 +18,15 @@ const swagger_1 = require("@nestjs/swagger");
 const invitations_service_1 = require("./invitations.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const get_user_decorator_1 = require("../auth/decorators/get-user.decorator");
-const send_invitation_dto_1 = require("./dto/send-invitation.dto");
-const get_user_invitations_dto_1 = require("./dto/get-user-invitations.dto");
+const class_validator_1 = require("class-validator");
+class SendInvitationDto {
+}
+class GetUserInvitationsDto {
+}
+__decorate([
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], GetUserInvitationsDto.prototype, "email", void 0);
 let InvitationsController = class InvitationsController {
     constructor(invitationsService) {
         this.invitationsService = invitationsService;
@@ -35,6 +42,19 @@ let InvitationsController = class InvitationsController {
         }
         catch (error) {
             console.error('Error sending invitation:', error, error?.message, error?.stack);
+            throw error;
+        }
+    }
+    async getUserInvitations(getUserInvitationsDto, user) {
+        try {
+            const invitations = await this.invitationsService.getUserInvitations(getUserInvitationsDto.email);
+            return {
+                success: true,
+                data: invitations,
+            };
+        }
+        catch (error) {
+            console.error('Error getting user invitations:', error);
             throw error;
         }
     }
@@ -65,19 +85,6 @@ let InvitationsController = class InvitationsController {
         }
         catch (error) {
             console.error('Error accepting invitation:', error);
-            throw error;
-        }
-    }
-    async getUserInvitations(getUserInvitationsDto, user) {
-        try {
-            const invitations = await this.invitationsService.getUserInvitations(getUserInvitationsDto.email);
-            return {
-                success: true,
-                data: invitations,
-            };
-        }
-        catch (error) {
-            console.error('Error getting user invitations:', error);
             throw error;
         }
     }
@@ -129,9 +136,21 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [send_invitation_dto_1.SendInvitationDto, Object]),
+    __metadata("design:paramtypes", [SendInvitationDto, Object]),
     __metadata("design:returntype", Promise)
 ], InvitationsController.prototype, "sendInvitation", null);
+__decorate([
+    (0, common_1.Post)('user/invitations'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user invitations by email' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User invitations retrieved' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [GetUserInvitationsDto, Object]),
+    __metadata("design:returntype", Promise)
+], InvitationsController.prototype, "getUserInvitations", null);
 __decorate([
     (0, common_1.Get)('token/:token'),
     (0, swagger_1.ApiOperation)({ summary: 'Get invitation details by token' }),
@@ -151,18 +170,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], InvitationsController.prototype, "acceptInvitation", null);
-__decorate([
-    (0, common_1.Post)('user/invitations'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user invitations by email' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User invitations retrieved' }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, get_user_decorator_1.GetUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [get_user_invitations_dto_1.GetUserInvitationsDto, Object]),
-    __metadata("design:returntype", Promise)
-], InvitationsController.prototype, "getUserInvitations", null);
 __decorate([
     (0, common_1.Get)('board/:boardId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
