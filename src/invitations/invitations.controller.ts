@@ -5,11 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
 import { IsEmail } from 'class-validator';
-
-class SendInvitationDto {
-  boardId: string;
-  email: string;
-}
+import { SendInvitationDto } from './dto/send-invitation.dto';
 
 class GetUserInvitationsDto {
   @IsEmail()

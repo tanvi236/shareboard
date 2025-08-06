@@ -29,7 +29,7 @@ export class BoardsService {
       .find({
         $or: [
           { owner: userId },           // Boards owned by user
-          { collaborators: userId }    // Boards where user is a collaborator
+          { collaborators: new Types.ObjectId(userId) }    // Boards where user is a collaborator
         ]
       })
       .populate(['owner', 'collaborators'])  // Don't populate blocks here for performance
@@ -68,12 +68,16 @@ export class BoardsService {
     if (!board) {
       throw new NotFoundException('Board not found');
     }
-
     // Check if user has access
     const hasAccess = 
-      board.owner.toString() === userId ||
-      board.collaborators.some(collaborator => collaborator.toString() === userId) ||
-      board.isPublic;
+      board.owner._id.toString() === userId ||
+      (Array.isArray(board.collaborators) &&
+        board.collaborators.some(
+          (collaborator: any) =>
+            (collaborator._id ? collaborator._id.toString() : collaborator.toString()) === userId
+        )
+      );
+      // board.isPublic;
 
     if (!hasAccess) {
       throw new ForbiddenException('Access denied');

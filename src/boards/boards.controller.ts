@@ -4,7 +4,7 @@ import { BoardsService } from './boards.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
-import { CreateBoardDto, UpdateBoardDto } from './boards.service';
+import { CreateBoardDto } from './dto/create-board.dto';
 import { BoardWithPopulatedBlocks } from './types/board.types';
 
 @ApiTags('boards')
@@ -72,7 +72,7 @@ export class BoardsController {
   @ApiResponse({ status: 200, description: 'Board updated successfully' })
   async update(
     @Param('id') id: string,
-    @Body() updateBoardDto: UpdateBoardDto,
+    @Body() updateBoardDto: CreateBoardDto,
     @GetUser() user: UserDocument,
   ) {
     const board = await this.boardsService.update(id, updateBoardDto, user._id.toString());
