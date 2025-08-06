@@ -5,8 +5,12 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
+const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.useStaticAssets((0, path_1.join)(__dirname, '..', 'uploads'), {
+        prefix: '/uploads/',
+    });
     app.enableCors({
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
         credentials: true,
@@ -40,10 +44,11 @@ async function bootstrap() {
         customfavIcon: 'https://nestjs.com/img/logo-small.svg',
         customCss: '.swagger-ui .topbar { display: none }',
     });
-    const port = process.env.PORT || 3001;
+    const port = process.env.PORT || 5005;
     await app.listen(port);
     console.log(`Application is running on: http://localhost:${port}`);
     console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+    console.log(`Image uploads: http://localhost:${port}/uploads/images/`);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

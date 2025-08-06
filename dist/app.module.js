@@ -11,13 +11,15 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const mongoose_1 = require("@nestjs/mongoose");
 const throttler_1 = require("@nestjs/throttler");
-const app_controller_1 = require("./app.controller");
-const app_service_1 = require("./app.service");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const boards_module_1 = require("./boards/boards.module");
 const blocks_module_1 = require("./blocks/blocks.module");
-const websocket_module_1 = require("./websocket/websocket.module");
+const app_controller_1 = require("./app.controller");
+const app_service_1 = require("./app.service");
+const upload_module_1 = require("./upload/upload.module");
+const invitations_module_1 = require("./invitations/invitations.module");
+const email_module_1 = require("./email/email.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -27,22 +29,18 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
             }),
-            mongoose_1.MongooseModule.forRootAsync({
-                imports: [config_1.ConfigModule],
-                useFactory: async (configService) => ({
-                    uri: configService.get('MONGODB_URI') || 'mongodb://localhost:27017/live-brainstorm',
-                }),
-                inject: [config_1.ConfigService],
-            }),
+            mongoose_1.MongooseModule.forRoot(process.env.MONGODB_URI || 'mongodb://localhost:27017/live-brainstorm'),
             throttler_1.ThrottlerModule.forRoot([{
-                    ttl: 60000,
-                    limit: 100,
+                    ttl: parseInt(process.env.THROTTLE_TTL) || 60000,
+                    limit: parseInt(process.env.THROTTLE_LIMIT) || 100,
                 }]),
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             boards_module_1.BoardsModule,
+            upload_module_1.UploadModule,
             blocks_module_1.BlocksModule,
-            websocket_module_1.WebsocketModule,
+            invitations_module_1.InvitationsModule,
+            email_module_1.EmailModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -20,16 +20,16 @@ __decorate([
     __metadata("design:type", String)
 ], Block.prototype, "type", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, maxlength: 2000 }),
+    (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
 ], Block.prototype, "content", void 0);
 __decorate([
     (0, mongoose_1.Prop)({
         type: {
-            x: { type: Number, required: true, min: 0 },
-            y: { type: Number, required: true, min: 0 },
+            x: { type: Number, required: true },
+            y: { type: Number, required: true }
         },
-        required: true,
+        required: true
     }),
     __metadata("design:type", Object)
 ], Block.prototype, "position", void 0);

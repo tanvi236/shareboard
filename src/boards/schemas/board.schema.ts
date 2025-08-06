@@ -5,6 +5,7 @@ export type BoardDocument = Board & Document;
 
 @Schema({ timestamps: true })
 export class Board {
+  
   @Prop({ required: true, trim: true, maxlength: 100 })
   name: string;
 

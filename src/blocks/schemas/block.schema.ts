@@ -6,17 +6,17 @@ export type BlockDocument = Block & Document;
 @Schema({ timestamps: true })
 export class Block {
   @Prop({ required: true, enum: ['text', 'image', 'link'] })
-  type: 'text' | 'image' | 'link';
+  type: string;
 
-  @Prop({ required: true, maxlength: 2000 })
+  @Prop({ required: true })
   content: string;
 
   @Prop({
     type: {
-      x: { type: Number, required: true, min: 0 },
-      y: { type: Number, required: true, min: 0 },
+      x: { type: Number, required: true },
+      y: { type: Number, required: true }
     },
-    required: true,
+    required: true
   })
   position: {
     x: number;

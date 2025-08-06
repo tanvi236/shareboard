@@ -1,7 +1,7 @@
 import { Document, Types } from 'mongoose';
 export type BlockDocument = Block & Document;
 export declare class Block {
-    type: 'text' | 'image' | 'link';
+    type: string;
     content: string;
     position: {
         x: number;
