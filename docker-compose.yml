@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: live-brainstorm-db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - brainstorm-network
+
+  backend:
+    build: .
+    container_name: live-brainstorm-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://admin:password@mongodb:27017/live-brainstorm?authSource=admin
+      - JWT_SECRET=your-super-secret-jwt-key-change-this
+      - FRONTEND_URL=http://localhost:3000
+      - PORT=5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    networks:
+      - brainstorm-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  brainstorm-network:
+    driver: bridge
