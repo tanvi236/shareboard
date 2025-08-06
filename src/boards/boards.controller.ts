@@ -1,11 +1,10 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { BoardsService } from './boards.service';
-import { CreateBoardDto } from './dto/create-board.dto';
-import { AddCollaboratorDto } from './dto/add-collaborator.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
+import { CreateBoardDto, UpdateBoardDto } from './boards.service';
 
 @ApiTags('boards')
 @Controller('boards')
@@ -14,46 +13,86 @@ import { UserDocument } from '../users/schemas/user.schema';
 export class BoardsController {
   constructor(private readonly boardsService: BoardsService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new board' })
-  @ApiResponse({ status: 201, description: 'Board successfully created' })
-  @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  create(@Body() createBoardDto: CreateBoardDto, @GetUser() user: UserDocument) {
-    return this.boardsService.create(createBoardDto, user._id.toString());
-  }
-
   @Get()
-  @ApiOperation({ summary: 'Get all boards for current user' })
-  @ApiResponse({ status: 200, description: 'Returns user boards' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findUserBoards(@GetUser() user: UserDocument) {
-    return this.boardsService.findUserBoards(user._id.toString());
+  @ApiOperation({ summary: 'Get all boards for user (owned + collaborated)' })
+  @ApiResponse({ status: 200, description: 'Boards retrieved successfully' })
+  async findAll(@GetUser() user: UserDocument) {
+    const boards = await this.boardsService.findAll(user._id.toString());
+    return {
+      success: true,
+      data: boards,
+    };
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get specific board with blocks' })
-  @ApiParam({ name: 'id', description: 'Board ID' })
-  @ApiResponse({ status: 200, description: 'Returns board with blocks' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - no access to board' })
-  @ApiResponse({ status: 404, description: 'Board not found' })
-  findOne(@Param('id') id: string, @GetUser() user: UserDocument) {
-    return this.boardsService.findOne(id, user._id.toString());
+  @ApiOperation({ summary: 'Get board by id' })
+  @ApiResponse({ status: 200, description: 'Board retrieved successfully' })
+  async findOne(
+    @Param('id') id: string,
+    @GetUser() user: UserDocument,
+  ) {
+    const board = await this.boardsService.findOne(id, user._id.toString());
+    return {
+      success: true,
+      data: board,
+    };
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create new board' })
+  @ApiResponse({ status: 201, description: 'Board created successfully' })
+  async create(
+    @Body() createBoardDto: CreateBoardDto,
+    @GetUser() user: UserDocument,
+  ) {
+    const board = await this.boardsService.create(createBoardDto, user._id.toString());
+    return {
+      success: true,
+      data: board,
+    };
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update board' })
+  @ApiResponse({ status: 200, description: 'Board updated successfully' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateBoardDto: UpdateBoardDto,
+    @GetUser() user: UserDocument,
+  ) {
+    const board = await this.boardsService.update(id, updateBoardDto, user._id.toString());
+    return {
+      success: true,
+      data: board,
+    };
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete board' })
+  @ApiResponse({ status: 200, description: 'Board deleted successfully' })
+  async remove(
+    @Param('id') id: string,
+    @GetUser() user: UserDocument,
+  ) {
+    await this.boardsService.remove(id, user._id.toString());
+    return {
+      success: true,
+      message: 'Board deleted successfully',
+    };
   }
 
   @Post(':id/collaborators')
   @ApiOperation({ summary: 'Add collaborator to board' })
-  @ApiParam({ name: 'id', description: 'Board ID' })
-  @ApiResponse({ status: 200, description: 'Collaborator successfully added' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden - only board owner can add collaborators' })
-  @ApiResponse({ status: 404, description: 'Board or user not found' })
-  addCollaborator(
+  @ApiResponse({ status: 200, description: 'Collaborator added successfully' })
+  async addCollaborator(
     @Param('id') id: string,
-    @Body() addCollaboratorDto: AddCollaboratorDto,
+    @Body() { email }: { email: string },
     @GetUser() user: UserDocument,
   ) {
-    return this.boardsService.addCollaborator(id, addCollaboratorDto, user._id.toString());
+    const board = await this.boardsService.addCollaborator(id, email, user._id.toString());
+    return {
+      success: true,
+      data: board,
+    };
   }
 }

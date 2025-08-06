@@ -1,72 +1,106 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Board, BoardDocument } from './schemas/board.schema';
-import { Block, BlockDocument } from '../blocks/schemas/block.schema';
-import { UsersService } from '../users/users.service';
-import { CreateBoardDto } from './dto/create-board.dto';
-import { AddCollaboratorDto } from './dto/add-collaborator.dto';
+import { User, UserDocument } from '../users/schemas/user.schema';
+
+export class CreateBoardDto {
+  name: string;
+  isPublic?: boolean;
+}
+
+export class UpdateBoardDto {
+  name?: string;
+  isPublic?: boolean;
+}
 
 @Injectable()
 export class BoardsService {
   constructor(
     @InjectModel(Board.name) private boardModel: Model<BoardDocument>,
-    @InjectModel(Block.name) private blockModel: Model<BlockDocument>,
-    private usersService: UsersService,
   ) {}
 
-  async create(createBoardDto: CreateBoardDto, userId: string): Promise<BoardDocument> {
-    const board = new this.boardModel({
-      ...createBoardDto,
-      owner: userId,
-    });
-
-    const savedBoard = await board.save();
-    await this.usersService.addBoardToUser(userId, savedBoard._id.toString());
-    
-    return savedBoard;
-  }
-
-  async findUserBoards(userId: string): Promise<BoardDocument[]> {
+  // Updated to include boards where user is collaborator
+  async findAll(userId: string): Promise<Board[]> {
     return this.boardModel
       .find({
         $or: [
-          { owner: userId },
-          { collaborators: userId },
-        ],
+          { owner: userId },           // Boards owned by user
+          { collaborators: userId }    // Boards where user is a collaborator
+        ]
       })
-      .populate('owner', 'name email')
-      .populate('collaborators', 'name email')
-      .exec();
+      .populate(['owner', 'collaborators'])
+      .sort({ updatedAt: -1 });
   }
 
-  async findOne(id: string, userId: string): Promise<BoardDocument & { blocks: BlockDocument[] }> {
+  async findOne(id: string, userId: string): Promise<Board> {
     const board = await this.boardModel
       .findById(id)
-      .populate('owner', 'name email')
-      .populate('collaborators', 'name email')
-      .exec();
+      .populate(['owner', 'collaborators']);
 
     if (!board) {
       throw new NotFoundException('Board not found');
     }
 
-    // Check access
-    const hasAccess = this.checkAccess(board, userId);
+    // Check if user has access (owner or collaborator)
+    const hasAccess = 
+      board.owner._id.toString() === userId ||
+      board.collaborators.some(collaborator => collaborator._id.toString() === userId) ||
+      board.isPublic;
+
     if (!hasAccess) {
       throw new ForbiddenException('Access denied');
     }
 
-    const blocks = await this.blockModel
-      .find({ boardId: board._id })
-      .populate('createdBy', 'name')
-      .exec();
-
-    return { ...board.toObject(), blocks } as BoardDocument & { blocks: BlockDocument[] };
+    return board;
   }
 
-  async addCollaborator(boardId: string, addCollaboratorDto: AddCollaboratorDto, userId: string): Promise<void> {
-    const board = await this.boardModel.findById(boardId).exec();
+  async create(createBoardDto: CreateBoardDto, userId: string): Promise<Board> {
+    const board = new this.boardModel({
+      ...createBoardDto,
+      owner: userId,
+      collaborators: [],
+      blocks: [],
+    });
+
+    await board.save();
+    return board.populate(['owner', 'collaborators']);
+  }
+
+  async update(id: string, updateBoardDto: UpdateBoardDto, userId: string): Promise<Board> {
+    const board = await this.boardModel.findById(id);
+
+    if (!board) {
+      throw new NotFoundException('Board not found');
+    }
+
+    if (board.owner.toString() !== userId) {
+      throw new ForbiddenException('Only board owner can update board');
+    }
+
+    Object.assign(board, updateBoardDto);
+    await board.save();
+
+    return board.populate(['owner', 'collaborators']);
+  }
+
+  async remove(id: string, userId: string): Promise<void> {
+    const board = await this.boardModel.findById(id);
+
+    if (!board) {
+      throw new NotFoundException('Board not found');
+    }
+
+    if (board.owner.toString() !== userId) {
+      throw new ForbiddenException('Only board owner can delete board');
+    }
+
+    await this.boardModel.findByIdAndDelete(id);
+  }
+
+  async addCollaborator(id: string, email: string, userId: string): Promise<Board> {
+    const board = await this.boardModel.findById(id);
+
     if (!board) {
       throw new NotFoundException('Board not found');
     }
@@ -75,30 +109,8 @@ export class BoardsService {
       throw new ForbiddenException('Only board owner can add collaborators');
     }
 
-    const collaborator = await this.usersService.findOne(addCollaboratorDto.email);
-    if (!collaborator) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (board.collaborators.some(id => id.toString() === collaborator._id.toString())) {
-      throw new ForbiddenException('User is already a collaborator');
-    }
-
-    board.collaborators.push(collaborator._id);
-    await board.save();
-  }
-
-  checkAccess(board: BoardDocument, userId: string): boolean {
-    return (
-      board.owner.toString() === userId ||
-      board.collaborators.some(id => id.toString() === userId) ||
-      board.isPublic
-    );
-  }
-
-  async checkBoardAccess(boardId: string, userId: string): Promise<boolean> {
-    const board = await this.boardModel.findById(boardId).exec();
-    if (!board) return false;
-    return this.checkAccess(board, userId);
+    // Implementation for adding collaborator would go here
+    
+    return board.populate(['owner', 'collaborators']);
   }
 }

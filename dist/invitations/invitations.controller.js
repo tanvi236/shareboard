@@ -19,6 +19,7 @@ const invitations_service_1 = require("./invitations.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const get_user_decorator_1 = require("../auth/decorators/get-user.decorator");
 const send_invitation_dto_1 = require("./dto/send-invitation.dto");
+const get_user_invitations_dto_1 = require("./dto/get-user-invitations.dto");
 let InvitationsController = class InvitationsController {
     constructor(invitationsService) {
         this.invitationsService = invitationsService;
@@ -67,9 +68,9 @@ let InvitationsController = class InvitationsController {
             throw error;
         }
     }
-    async getUserInvitations(email) {
+    async getUserInvitations(getUserInvitationsDto, user) {
         try {
-            const invitations = await this.invitationsService.getUserInvitations(email);
+            const invitations = await this.invitationsService.getUserInvitations(getUserInvitationsDto.email);
             return {
                 success: true,
                 data: invitations,
@@ -151,12 +152,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], InvitationsController.prototype, "acceptInvitation", null);
 __decorate([
-    (0, common_1.Get)('user/:email'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get user invitations' }),
+    (0, common_1.Post)('user/invitations'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get user invitations by email' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'User invitations retrieved' }),
-    __param(0, (0, common_1.Param)('email')),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [get_user_invitations_dto_1.GetUserInvitationsDto, Object]),
     __metadata("design:returntype", Promise)
 ], InvitationsController.prototype, "getUserInvitations", null);
 __decorate([

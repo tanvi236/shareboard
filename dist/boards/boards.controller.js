@@ -16,78 +16,117 @@ exports.BoardsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const boards_service_1 = require("./boards.service");
-const create_board_dto_1 = require("./dto/create-board.dto");
-const add_collaborator_dto_1 = require("./dto/add-collaborator.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const get_user_decorator_1 = require("../auth/decorators/get-user.decorator");
+const boards_service_2 = require("./boards.service");
 let BoardsController = class BoardsController {
     constructor(boardsService) {
         this.boardsService = boardsService;
     }
-    create(createBoardDto, user) {
-        return this.boardsService.create(createBoardDto, user._id.toString());
+    async findAll(user) {
+        const boards = await this.boardsService.findAll(user._id.toString());
+        return {
+            success: true,
+            data: boards,
+        };
     }
-    findUserBoards(user) {
-        return this.boardsService.findUserBoards(user._id.toString());
+    async findOne(id, user) {
+        const board = await this.boardsService.findOne(id, user._id.toString());
+        return {
+            success: true,
+            data: board,
+        };
     }
-    findOne(id, user) {
-        return this.boardsService.findOne(id, user._id.toString());
+    async create(createBoardDto, user) {
+        const board = await this.boardsService.create(createBoardDto, user._id.toString());
+        return {
+            success: true,
+            data: board,
+        };
     }
-    addCollaborator(id, addCollaboratorDto, user) {
-        return this.boardsService.addCollaborator(id, addCollaboratorDto, user._id.toString());
+    async update(id, updateBoardDto, user) {
+        const board = await this.boardsService.update(id, updateBoardDto, user._id.toString());
+        return {
+            success: true,
+            data: board,
+        };
+    }
+    async remove(id, user) {
+        await this.boardsService.remove(id, user._id.toString());
+        return {
+            success: true,
+            message: 'Board deleted successfully',
+        };
+    }
+    async addCollaborator(id, { email }, user) {
+        const board = await this.boardsService.addCollaborator(id, email, user._id.toString());
+        return {
+            success: true,
+            data: board,
+        };
     }
 };
 exports.BoardsController = BoardsController;
 __decorate([
-    (0, common_1.Post)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Create a new board' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'Board successfully created' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad request - validation failed' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, get_user_decorator_1.GetUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_board_dto_1.CreateBoardDto, Object]),
-    __metadata("design:returntype", void 0)
-], BoardsController.prototype, "create", null);
-__decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all boards for current user' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns user boards' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all boards for user (owned + collaborated)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Boards retrieved successfully' }),
     __param(0, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], BoardsController.prototype, "findUserBoards", null);
+    __metadata("design:returntype", Promise)
+], BoardsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get specific board with blocks' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'Board ID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns board with blocks' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - no access to board' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Board not found' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Get board by id' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Board retrieved successfully' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], BoardsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Post)(':id/collaborators'),
-    (0, swagger_1.ApiOperation)({ summary: 'Add collaborator to board' }),
-    (0, swagger_1.ApiParam)({ name: 'id', description: 'Board ID' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Collaborator successfully added' }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - only board owner can add collaborators' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Board or user not found' }),
+    (0, common_1.Post)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create new board' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Board created successfully' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [boards_service_2.CreateBoardDto, Object]),
+    __metadata("design:returntype", Promise)
+], BoardsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Put)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Update board' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Board updated successfully' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, add_collaborator_dto_1.AddCollaboratorDto, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [String, boards_service_2.UpdateBoardDto, Object]),
+    __metadata("design:returntype", Promise)
+], BoardsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete board' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Board deleted successfully' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], BoardsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)(':id/collaborators'),
+    (0, swagger_1.ApiOperation)({ summary: 'Add collaborator to board' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Collaborator added successfully' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, get_user_decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
 ], BoardsController.prototype, "addCollaborator", null);
 exports.BoardsController = BoardsController = __decorate([
     (0, swagger_1.ApiTags)('boards'),

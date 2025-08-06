@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { isValidObjectId, Model, Types } from 'mongoose';
+import { Model, Types, isValidObjectId } from 'mongoose';
 import { Invitation, InvitationDocument } from './schemas/invitation.schema';
 import { Board, BoardDocument } from '../boards/schemas/board.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
@@ -21,15 +21,24 @@ export class InvitationsService {
     email: string,
     inviterId: string,
   ): Promise<Invitation> {
+    console.log("createInvitation called with boardId:", boardId, "email:", email, "inviterId:", inviterId);
+    console.log('typeof boardId:', typeof boardId, 'length:', boardId.length, 'value:', boardId);
+
     // Check if board exists and user has permission
-  
+    if (!isValidObjectId(boardId)) {
+      throw new BadRequestException('Invalid board ID format');
+    }
+    
     const board = await this.boardModel.findById(new Types.ObjectId(boardId));
+    console.log("Board found:", board);
+    
     if (!board) {
       throw new NotFoundException('Board not found');
     }
+    
     if (board.owner.toString() !== inviterId) {
-        throw new ForbiddenException('Only board owner can send invitations');
-      }
+      throw new ForbiddenException('Only board owner can send invitations');
+    }
 
     // Check if user is already a collaborator
     const existingCollaborator = await this.userModel.findOne({ email });
@@ -66,7 +75,7 @@ export class InvitationsService {
 
     await invitation.save();
 
-    // Send invitation email
+    // Send invitation email (commented out for testing)
     const inviter = await this.userModel.findById(inviterId);
     // await this.emailService.sendInvitation(
     //   email,

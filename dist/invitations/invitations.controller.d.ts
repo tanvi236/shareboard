@@ -1,6 +1,7 @@
 import { InvitationsService } from './invitations.service';
 import { UserDocument } from '../users/schemas/user.schema';
 import { SendInvitationDto } from './dto/send-invitation.dto';
+import { GetUserInvitationsDto } from './dto/get-user-invitations.dto';
 export declare class InvitationsController {
     private readonly invitationsService;
     constructor(invitationsService: InvitationsService);
@@ -21,7 +22,7 @@ export declare class InvitationsController {
             requiresRegistration: boolean;
         };
     }>;
-    getUserInvitations(email: string): Promise<{
+    getUserInvitations(getUserInvitationsDto: GetUserInvitationsDto, user: UserDocument): Promise<{
         success: boolean;
         data: import("./schemas/invitation.schema").Invitation[];
     }>;

@@ -12,96 +12,94 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BoardsService = void 0;
+exports.BoardsService = exports.UpdateBoardDto = exports.CreateBoardDto = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const board_schema_1 = require("./schemas/board.schema");
-const block_schema_1 = require("../blocks/schemas/block.schema");
-const users_service_1 = require("../users/users.service");
+class CreateBoardDto {
+}
+exports.CreateBoardDto = CreateBoardDto;
+class UpdateBoardDto {
+}
+exports.UpdateBoardDto = UpdateBoardDto;
 let BoardsService = class BoardsService {
-    constructor(boardModel, blockModel, usersService) {
+    constructor(boardModel) {
         this.boardModel = boardModel;
-        this.blockModel = blockModel;
-        this.usersService = usersService;
+    }
+    async findAll(userId) {
+        return this.boardModel
+            .find({
+            $or: [
+                { owner: userId },
+                { collaborators: userId }
+            ]
+        })
+            .populate(['owner', 'collaborators'])
+            .sort({ updatedAt: -1 });
+    }
+    async findOne(id, userId) {
+        const board = await this.boardModel
+            .findById(id)
+            .populate(['owner', 'collaborators']);
+        if (!board) {
+            throw new common_1.NotFoundException('Board not found');
+        }
+        const hasAccess = board.owner._id.toString() === userId ||
+            board.collaborators.some(collaborator => collaborator._id.toString() === userId) ||
+            board.isPublic;
+        if (!hasAccess) {
+            throw new common_1.ForbiddenException('Access denied');
+        }
+        return board;
     }
     async create(createBoardDto, userId) {
         const board = new this.boardModel({
             ...createBoardDto,
             owner: userId,
+            collaborators: [],
+            blocks: [],
         });
-        const savedBoard = await board.save();
-        await this.usersService.addBoardToUser(userId, savedBoard._id.toString());
-        return savedBoard;
+        await board.save();
+        return board.populate(['owner', 'collaborators']);
     }
-    async findUserBoards(userId) {
-        return this.boardModel
-            .find({
-            $or: [
-                { owner: userId },
-                { collaborators: userId },
-            ],
-        })
-            .populate('owner', 'name email')
-            .populate('collaborators', 'name email')
-            .exec();
-    }
-    async findOne(id, userId) {
-        const board = await this.boardModel
-            .findById(id)
-            .populate('owner', 'name email')
-            .populate('collaborators', 'name email')
-            .exec();
+    async update(id, updateBoardDto, userId) {
+        const board = await this.boardModel.findById(id);
         if (!board) {
             throw new common_1.NotFoundException('Board not found');
         }
-        const hasAccess = this.checkAccess(board, userId);
-        if (!hasAccess) {
-            throw new common_1.ForbiddenException('Access denied');
+        if (board.owner.toString() !== userId) {
+            throw new common_1.ForbiddenException('Only board owner can update board');
         }
-        const blocks = await this.blockModel
-            .find({ boardId: board._id })
-            .populate('createdBy', 'name')
-            .exec();
-        return { ...board.toObject(), blocks };
+        Object.assign(board, updateBoardDto);
+        await board.save();
+        return board.populate(['owner', 'collaborators']);
     }
-    async addCollaborator(boardId, addCollaboratorDto, userId) {
-        const board = await this.boardModel.findById(boardId).exec();
+    async remove(id, userId) {
+        const board = await this.boardModel.findById(id);
+        if (!board) {
+            throw new common_1.NotFoundException('Board not found');
+        }
+        if (board.owner.toString() !== userId) {
+            throw new common_1.ForbiddenException('Only board owner can delete board');
+        }
+        await this.boardModel.findByIdAndDelete(id);
+    }
+    async addCollaborator(id, email, userId) {
+        const board = await this.boardModel.findById(id);
         if (!board) {
             throw new common_1.NotFoundException('Board not found');
         }
         if (board.owner.toString() !== userId) {
             throw new common_1.ForbiddenException('Only board owner can add collaborators');
         }
-        const collaborator = await this.usersService.findOne(addCollaboratorDto.email);
-        if (!collaborator) {
-            throw new common_1.NotFoundException('User not found');
-        }
-        if (board.collaborators.some(id => id.toString() === collaborator._id.toString())) {
-            throw new common_1.ForbiddenException('User is already a collaborator');
-        }
-        board.collaborators.push(collaborator._id);
-        await board.save();
-    }
-    checkAccess(board, userId) {
-        return (board.owner.toString() === userId ||
-            board.collaborators.some(id => id.toString() === userId) ||
-            board.isPublic);
-    }
-    async checkBoardAccess(boardId, userId) {
-        const board = await this.boardModel.findById(boardId).exec();
-        if (!board)
-            return false;
-        return this.checkAccess(board, userId);
+        return board.populate(['owner', 'collaborators']);
     }
 };
 exports.BoardsService = BoardsService;
 exports.BoardsService = BoardsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(board_schema_1.Board.name)),
-    __param(1, (0, mongoose_1.InjectModel)(block_schema_1.Block.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model,
-        users_service_1.UsersService])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], BoardsService);
 //# sourceMappingURL=boards.service.js.map

@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UserDocument } from '../users/schemas/user.schema';
 import { SendInvitationDto } from './dto/send-invitation.dto';
+import { GetUserInvitationsDto } from './dto/get-user-invitations.dto';
 
 @ApiTags('invitations')
 @Controller('invitations')
@@ -78,21 +79,28 @@ export class InvitationsController {
     }
   }
 
-  @Get('user/:email')
-  @ApiOperation({ summary: 'Get user invitations' })
-  @ApiResponse({ status: 200, description: 'User invitations retrieved' })
-  async getUserInvitations(@Param('email') email: string) {
-    try {
-      const invitations = await this.invitationsService.getUserInvitations(email);
-      return {
-        success: true,
-        data: invitations,
-      };
-    } catch (error) {
-      console.error('Error getting user invitations:', error);
-      throw error;
-    }
+  @Post('user/invitations')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({ summary: 'Get user invitations by email' })
+@ApiResponse({ status: 200, description: 'User invitations retrieved' })
+async getUserInvitations(
+  @Body() getUserInvitationsDto: GetUserInvitationsDto,
+  @GetUser() user: UserDocument,
+) {
+  try {
+    const invitations = await this.invitationsService.getUserInvitations(
+      getUserInvitationsDto.email
+    );
+    return {
+      success: true,
+      data: invitations,
+    };
+  } catch (error) {
+    console.error('Error getting user invitations:', error);
+    throw error;
   }
+}
 
   @Get('board/:boardId')
   @UseGuards(JwtAuthGuard)
