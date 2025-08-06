@@ -29,8 +29,6 @@ let InvitationsService = class InvitationsService {
         this.emailService = emailService;
     }
     async createInvitation(boardId, email, inviterId) {
-        console.log("createInvitation called with boardId:", boardId, "email:", email, "inviterId:", inviterId);
-        console.log('typeof boardId:', typeof boardId, 'length:', boardId.length, 'value:', boardId);
         if (!(0, mongoose_2.isValidObjectId)(boardId)) {
             throw new common_1.BadRequestException('Invalid board ID format');
         }

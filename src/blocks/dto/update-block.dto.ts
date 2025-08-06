@@ -1,17 +1,40 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateBlockDto } from './create-block.dto';
-import { IsOptional, IsDate, Min } from 'class-validator';
+import { IsOptional, IsString, IsObject, ValidateNested, IsNumber, Min, IsNotEmpty } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
-export class UpdateBlockDto extends PartialType(CreateBlockDto) {
-  @IsOptional()
-  @IsDate()
-  lastEdited?: Date;
+class PositionDto {
+  @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
+  x: number;
+
+  @IsNumber()
+  @Transform(({ value }) => parseFloat(value))
+  y: number;
 
   @IsOptional()
-  @Min(50)
+  @IsString()
+  dropEffect?: string;  // Allow dropEffect property
+}
+
+export class UpdateBlockDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  content?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PositionDto)
+  position?: PositionDto;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(10)
+  @Transform(({ value }) => parseFloat(value))
   width?: number;
 
   @IsOptional()
-  @Min(50)
+  @IsNumber()
+  @Min(10)
+  @Transform(({ value }) => parseFloat(value))
   height?: number;
 }

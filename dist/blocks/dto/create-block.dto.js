@@ -15,10 +15,12 @@ const class_transformer_1 = require("class-transformer");
 class PositionDto {
 }
 __decorate([
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], PositionDto.prototype, "x", void 0);
 __decorate([
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], PositionDto.prototype, "y", void 0);
@@ -26,21 +28,38 @@ class CreateBlockDto {
 }
 exports.CreateBlockDto = CreateBlockDto;
 __decorate([
-    (0, class_validator_1.IsEnum)(['text', 'image', 'link']),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['text', 'image', 'link']),
     __metadata("design:type", String)
 ], CreateBlockDto.prototype, "type", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateBlockDto.prototype, "content", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsObject)(),
     (0, class_validator_1.ValidateNested)(),
     (0, class_transformer_1.Type)(() => PositionDto),
     __metadata("design:type", PositionDto)
 ], CreateBlockDto.prototype, "position", void 0);
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateBlockDto.prototype, "boardId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(50),
+    __metadata("design:type", Number)
+], CreateBlockDto.prototype, "width", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(50),
+    __metadata("design:type", Number)
+], CreateBlockDto.prototype, "height", void 0);
 //# sourceMappingURL=create-block.dto.js.map

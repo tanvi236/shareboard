@@ -21,9 +21,7 @@ export class InvitationsService {
     email: string,
     inviterId: string,
   ): Promise<Invitation> {
-    console.log("createInvitation called with boardId:", boardId, "email:", email, "inviterId:", inviterId);
-    console.log('typeof boardId:', typeof boardId, 'length:', boardId.length, 'value:', boardId);
-
+    
     // Check if board exists and user has permission
     if (!isValidObjectId(boardId)) {
       throw new BadRequestException('Invalid board ID format');

@@ -70,7 +70,7 @@ let BoardsService = class BoardsService {
             throw new common_1.ForbiddenException('Access denied');
         }
         const blocks = await this.blockModel
-            .find({ boardId: id })
+            .find({ boardId: new mongoose_2.Types.ObjectId(id) })
             .populate('createdBy')
             .sort({ createdAt: -1 })
             .lean();

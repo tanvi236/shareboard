@@ -25,6 +25,10 @@ let BlocksService = class BlocksService {
     }
     async create(createBlockDto, userId) {
         try {
+            console.log('Creating block with data:', createBlockDto, 'User:', userId);
+            if (!(0, mongoose_2.isValidObjectId)(createBlockDto.boardId)) {
+                throw new common_1.BadRequestException('Invalid board ID format');
+            }
             const board = await this.boardModel.findById(createBlockDto.boardId);
             if (!board) {
                 throw new common_1.NotFoundException('Board not found');
@@ -42,7 +46,7 @@ let BlocksService = class BlocksService {
             };
             const createdBlock = new this.blockModel(blockData);
             const savedBlock = await createdBlock.save();
-            console.log('Block saved successfully:', savedBlock);
+            console.log('Block saved successfully:', savedBlock._id);
             return savedBlock.populate(['createdBy']);
         }
         catch (error) {
@@ -52,22 +56,42 @@ let BlocksService = class BlocksService {
     }
     async update(id, updateBlockDto, userId) {
         try {
+            console.log('Updating block:', id, 'with data:', updateBlockDto, 'User:', userId);
+            if (!(0, mongoose_2.isValidObjectId)(id)) {
+                throw new common_1.BadRequestException('Invalid block ID format');
+            }
             const block = await this.blockModel.findById(id);
             if (!block) {
                 throw new common_1.NotFoundException('Block not found');
             }
+            console.log('Found block:', block._id, 'BoardId:', block.boardId);
             const board = await this.boardModel.findById(block.boardId);
+            if (!board) {
+                throw new common_1.NotFoundException('Associated board not found');
+            }
             const hasAccess = board.owner.toString() === userId ||
                 board.collaborators.some(collaborator => collaborator.toString() === userId);
             if (!hasAccess) {
                 throw new common_1.ForbiddenException('Access denied');
             }
+            if (Object.keys(updateBlockDto).length === 0) {
+                throw new common_1.BadRequestException('No update data provided');
+            }
+            const cleanUpdateData = { ...updateBlockDto };
+            if (cleanUpdateData.position && cleanUpdateData.position.dropEffect) {
+                const { dropEffect, ...cleanPosition } = cleanUpdateData.position;
+                cleanUpdateData.position = cleanPosition;
+            }
             const updateData = {
-                ...updateBlockDto,
+                ...cleanUpdateData,
                 lastEdited: new Date(),
             };
-            const updatedBlock = await this.blockModel.findByIdAndUpdate(id, updateData, { new: true }).populate(['createdBy']);
-            console.log('Block updated successfully:', updatedBlock);
+            console.log('Updating with cleaned data:', updateData);
+            const updatedBlock = await this.blockModel.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate(['createdBy']);
+            if (!updatedBlock) {
+                throw new common_1.NotFoundException('Block not found after update');
+            }
+            console.log('Block updated successfully:', updatedBlock._id);
             return updatedBlock;
         }
         catch (error) {
@@ -77,11 +101,18 @@ let BlocksService = class BlocksService {
     }
     async remove(id, userId) {
         try {
+            console.log('Deleting block:', id, 'User:', userId);
+            if (!(0, mongoose_2.isValidObjectId)(id)) {
+                throw new common_1.BadRequestException('Invalid block ID format');
+            }
             const block = await this.blockModel.findById(id);
             if (!block) {
                 throw new common_1.NotFoundException('Block not found');
             }
             const board = await this.boardModel.findById(block.boardId);
+            if (!board) {
+                throw new common_1.NotFoundException('Associated board not found');
+            }
             const hasAccess = board.owner.toString() === userId ||
                 board.collaborators.some(collaborator => collaborator.toString() === userId);
             if (!hasAccess) {
@@ -95,8 +126,22 @@ let BlocksService = class BlocksService {
             throw error;
         }
     }
-    async findByBoard(boardId) {
+    async findByBoard(boardId, userId) {
         try {
+            console.log('Finding blocks for board:', boardId, 'User:', userId);
+            if (!(0, mongoose_2.isValidObjectId)(boardId)) {
+                throw new common_1.BadRequestException('Invalid board ID format');
+            }
+            const board = await this.boardModel.findById(boardId);
+            if (!board) {
+                throw new common_1.NotFoundException('Board not found');
+            }
+            const hasAccess = board.owner.toString() === userId ||
+                board.collaborators.some(collaborator => collaborator.toString() === userId) ||
+                board.isPublic;
+            if (!hasAccess) {
+                throw new common_1.ForbiddenException('Access denied');
+            }
             const blocks = await this.blockModel
                 .find({ boardId: new mongoose_2.Types.ObjectId(boardId) })
                 .populate(['createdBy'])

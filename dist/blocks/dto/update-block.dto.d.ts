@@ -1,7 +1,11 @@
-import { CreateBlockDto } from './create-block.dto';
-declare const UpdateBlockDto_base: import("@nestjs/mapped-types").MappedType<Partial<CreateBlockDto>>;
-export declare class UpdateBlockDto extends UpdateBlockDto_base {
-    lastEdited?: Date;
+declare class PositionDto {
+    x: number;
+    y: number;
+    dropEffect?: string;
+}
+export declare class UpdateBlockDto {
+    content?: string;
+    position?: PositionDto;
     width?: number;
     height?: number;
 }

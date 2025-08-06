@@ -81,7 +81,7 @@ export class BoardsService {
 
     // Fetch all blocks for this board
     const blocks = await this.blockModel
-      .find({ boardId: id })
+      .find({ boardId: new Types.ObjectId(id) })
       .populate('createdBy')
       .sort({ createdAt: -1 })
       .lean();

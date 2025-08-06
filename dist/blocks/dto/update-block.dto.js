@@ -10,25 +10,52 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateBlockDto = void 0;
-const mapped_types_1 = require("@nestjs/mapped-types");
-const create_block_dto_1 = require("./create-block.dto");
 const class_validator_1 = require("class-validator");
-class UpdateBlockDto extends (0, mapped_types_1.PartialType)(create_block_dto_1.CreateBlockDto) {
+const class_transformer_1 = require("class-transformer");
+class PositionDto {
+}
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    __metadata("design:type", Number)
+], PositionDto.prototype, "x", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
+    __metadata("design:type", Number)
+], PositionDto.prototype, "y", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], PositionDto.prototype, "dropEffect", void 0);
+class UpdateBlockDto {
 }
 exports.UpdateBlockDto = UpdateBlockDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDate)(),
-    __metadata("design:type", Date)
-], UpdateBlockDto.prototype, "lastEdited", void 0);
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], UpdateBlockDto.prototype, "content", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.Min)(50),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => PositionDto),
+    __metadata("design:type", PositionDto)
+], UpdateBlockDto.prototype, "position", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(10),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
     __metadata("design:type", Number)
 ], UpdateBlockDto.prototype, "width", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.Min)(50),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(10),
+    (0, class_transformer_1.Transform)(({ value }) => parseFloat(value)),
     __metadata("design:type", Number)
 ], UpdateBlockDto.prototype, "height", void 0);
 //# sourceMappingURL=update-block.dto.js.map

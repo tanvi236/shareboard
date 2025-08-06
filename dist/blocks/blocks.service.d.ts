@@ -10,5 +10,5 @@ export declare class BlocksService {
     create(createBlockDto: CreateBlockDto, userId: string): Promise<Block>;
     update(id: string, updateBlockDto: UpdateBlockDto, userId: string): Promise<Block>;
     remove(id: string, userId: string): Promise<void>;
-    findByBoard(boardId: string): Promise<Block[]>;
+    findByBoard(boardId: string, userId: string): Promise<Block[]>;
 }

@@ -7,5 +7,7 @@ export declare class CreateBlockDto {
     content: string;
     position: PositionDto;
     boardId: string;
+    width?: number;
+    height?: number;
 }
 export {};
