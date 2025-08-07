@@ -11,14 +11,15 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule); // Update this line
 
   // ✅ CORRECT: Use useStaticAssets() for serving static files
- const uploadPath = '/tmp/uploads';
-  if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-  }
+const uploadPath = '/tmp/uploads/images';
 
-  app.useStaticAssets(uploadPath, {
-    prefix: '/uploads/',
-  });
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+
+ app.useStaticAssets('/tmp/uploads', {
+  prefix: '/uploads/',
+});
 
   // Enable CORS
   app.enableCors({

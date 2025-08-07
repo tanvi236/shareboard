@@ -2,7 +2,7 @@
 FROM node:18-alpine AS builder
 
 WORKDIR /app
-RUN mkdir -p /app/uploads/images
+#RUN mkdir -p /app/uploads/images
 # Copy package files
 COPY package*.json ./
 COPY tsconfig*.json ./
@@ -22,7 +22,7 @@ RUN npm run build
 FROM node:18-alpine AS production
 
 WORKDIR /app
-RUN mkdir -p /app/uploads/images
+#RUN mkdir -p /app/uploads/images
 # Copy package files
 COPY package*.json ./
 
