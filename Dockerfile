@@ -2,17 +2,18 @@
 FROM node:18-alpine AS builder
 
 WORKDIR /app
-
+RUN mkdir -p /app/uploads/images
 # Copy package files
 COPY package*.json ./
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY src ./src
+
 
 # Build application
 RUN npm run build
@@ -21,7 +22,7 @@ RUN npm run build
 FROM node:18-alpine AS production
 
 WORKDIR /app
-
+RUN mkdir -p /app/uploads/images
 # Copy package files
 COPY package*.json ./
 
