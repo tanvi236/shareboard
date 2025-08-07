@@ -4,21 +4,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { join } from 'path';  
-import fs from 'fs';
+import * as fs from 'fs';
 import { NestExpressApplication } from '@nestjs/platform-express'; // Add this import
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule); // Update this line
 
   // ✅ CORRECT: Use useStaticAssets() for serving static files
-  const uploadPath = '/tmp/uploads';
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
+ const uploadPath = '/tmp/uploads';
+  if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+  }
 
-app.useStaticAssets(uploadPath, {
-  prefix: '/uploads/',
-});
+  app.useStaticAssets(uploadPath, {
+    prefix: '/uploads/',
+  });
 
   // Enable CORS
   app.enableCors({
